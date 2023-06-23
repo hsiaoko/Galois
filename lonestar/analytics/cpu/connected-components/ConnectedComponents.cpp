@@ -1175,6 +1175,7 @@ template <typename Algo>
 void run() {
   using Graph = typename Algo::Graph;
 
+  auto start_time = std::chrono::system_clock::now();
   Algo algo;
   Graph graph;
 
@@ -1195,6 +1196,12 @@ void run() {
 
   galois::reportPageAlloc("MeminfoPost");
 
+  auto end_time = std::chrono::system_clock::now();
+  std::cout<<"Running time: " <<
+             std::chrono::duration_cast<std::chrono::microseconds>(end_time -
+                                                                   start_time)
+                 .count() /
+             (double)CLOCKS_PER_SEC << std::endl;
   if (!skipVerify || largestComponentFilename != "" ||
       permutationFilename != "") {
     findLargest<Algo, Graph>(graph);
@@ -1202,9 +1209,11 @@ void run() {
       GALOIS_DIE("verification failed");
     }
   }
+
 }
 
 int main(int argc, char** argv) {
+  auto start_time = std::chrono::system_clock::now();
   galois::SharedMemSys G;
   LonestarStart(argc, argv, name, desc, nullptr, &inputFile);
 
@@ -1217,6 +1226,7 @@ int main(int argc, char** argv) {
                " to indicate the input is a symmetric graph.");
   }
 
+  auto compute_start_time = std::chrono::system_clock::now();
   switch (algo) {
   case Algo::async:
     run<AsyncAlgo>();
@@ -1253,8 +1263,20 @@ int main(int argc, char** argv) {
     std::cerr << "Unknown algorithm\n";
     abort();
   }
+  auto end_time = std::chrono::system_clock::now();
+  std::cout<<"Total elapsed time: " <<
+             std::chrono::duration_cast<std::chrono::microseconds>(end_time -
+                                                                   start_time)
+                 .count() /
+             (double)CLOCKS_PER_SEC <<
+             "     Computing elapsed time: " <<
+             std::chrono::duration_cast<std::chrono::microseconds>(end_time -
+                                                                   compute_start_time)
+                 .count() /
+             (double)CLOCKS_PER_SEC << std::endl;
 
   totalTime.stop();
+
 
   return 0;
 }
